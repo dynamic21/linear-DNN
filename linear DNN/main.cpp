@@ -33,14 +33,20 @@ double doubleRand() { return (intRand() + 1.0) * 2.328306435454494e-10; }
 
 double activation(double x)
 {
-	x = exp(2 * x);
-	return (x - 1) / (x + 1);
+	if (x < 0) return -log(1 - x);
+	return log(x + 1);
+
+	/*x = exp(2 * x);
+	return (x - 1) / (x + 1);*/
 }
 
 double dactivation(double x)
 {
-	x = exp(x) + exp(-x);
-	return 4 / (x * x);
+	if (x < 0) return 1 / (1 - x);
+	return 1 / (x + 1);
+
+	/*x = exp(x) + exp(-x);
+	return 4 / (x * x);*/
 }
 
 class DNN
@@ -380,7 +386,7 @@ int main()
 
 		agent.applyPropagationChange(1.0 / batchSize);
 
-		if (++tick == 10000)
+		if (++tick == 100000)
 		{
 			tick = 0;
 

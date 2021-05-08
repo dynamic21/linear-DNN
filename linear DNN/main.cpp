@@ -95,97 +95,45 @@ public:
 
 	void print()
 	{
-		cout << "output: ";
+		cout << "order: ";
+		for (int n = 0; n < order.size(); n++) cout << order[n] << " ";
 
-		for (int n = 0; n < output.size(); n++)
-		{
-			cout << output[n] << " ";
-		}
+		cout << endl << endl << "empty: ";
+		for (int n = 0; n < empty.size(); n++) cout << empty[n] << " ";
 
-		cout << endl << endl;
+		cout << endl << endl << "output: ";
+		for (int n = 0; n < output.size(); n++) cout << output[n] << " ";
 
-		cout << "doutput: ";
+		cout << endl << endl << "doutput: ";
+		for (int n = 0; n < doutput.size(); n++) cout << doutput[n] << " ";
 
-		for (int n = 0; n < doutput.size(); n++)
-		{
-			cout << doutput[n] << " ";
-		}
+		cout << endl << endl << "preoutput: ";
+		for (int n = 0; n < preoutput.size(); n++) cout << preoutput[n] << " ";
 
-		cout << endl << endl;
+		cout << endl << endl << "bias: ";
+		for (int n = 0; n < bias.size(); n++) cout << bias[n] << " ";
 
-		cout << "preoutput: ";
+		cout << endl << endl << "dbias: ";
+		for (int n = 0; n < dbias.size(); n++) cout << dbias[n] << " ";
 
-		for (int n = 0; n < preoutput.size(); n++)
-		{
-			cout << preoutput[n] << " ";
-		}
-
-		cout << endl << endl;
-
-		cout << "empty: ";
-
-		for (int n = 0; n < empty.size(); n++)
-		{
-			cout << empty[n] << " ";
-		}
-
-		cout << endl << endl;
-
-		cout << "bias: ";
-
-		for (int n = 0; n < bias.size(); n++)
-		{
-			cout << bias[n] << " ";
-		}
-
-		cout << endl << endl;
-
-		cout << "dbias: ";
-
-		for (int n = 0; n < dbias.size(); n++)
-		{
-			cout << dbias[n] << " ";
-		}
-
-		cout << endl << endl;
-
-		cout << "weights: " << endl;
-
+		cout << endl << endl << "weights: " << endl;
 		for (int n = 0; n < weights.size(); n++)
 		{
-			for (int i = 0; i < weights[n].size(); i++)
-			{
-				cout << weights[n][i] << " ";
-			}
-
+			for (int i = 0; i < weights[n].size(); i++) cout << weights[n][i] << " ";
 			cout << endl;
 		}
 
-		cout << endl;
-
-		cout << "dweights: " << endl;
-
+		cout << endl << "dweights: " << endl;
 		for (int n = 0; n < dweights.size(); n++)
 		{
-			for (int i = 0; i < dweights[n].size(); i++)
-			{
-				cout << dweights[n][i] << " ";
-			}
-
+			for (int i = 0; i < dweights[n].size(); i++) cout << dweights[n][i] << " ";
 			cout << endl;
 		}
 
-		cout << endl;
-
-		cout << "connections: " << endl;
-
+		cout << endl << "connections: " << endl;
 		for (int n = 0; n < connections.size(); n++)
 		{
-			for (int i = 0; i < connections[n].size(); i++)
-			{
-				cout << connections[n][i] << " ";
-			}
-
+			for (int i = 0; i < connections[n].size(); i++) cout << connections[n][i] << " ";
 			cout << endl;
 		}
 
@@ -205,46 +153,28 @@ public:
 	void updateOrder()
 	{
 		order.clear();
-
 		bool* searched = new bool[bias.size()]{};
 
 		for (int i = 0; i < numInputs; i++) searched[i] = true;
-
 		for (int o = numInputs; o < numInputs + numOutputs; o++)
 			getNodeOrder(o, searched);
 
 		delete[] searched;
 	}
 
-	void getNodeValue(int node, bool* searched)
+	void getNodeValue(int node)
 	{
 		for (int c = 0; c < connections[node].size(); c++)
-		{
-			int childNode = connections[node][c];
-
-			if (!searched[childNode]) getNodeValue(childNode, searched);
-			preoutput[node] += output[childNode] * weights[node][c];
-		}
+			preoutput[node] += output[connections[node][c]] * weights[node][c];
 
 		output[node] = activation(preoutput[node]);
-		searched[node] = true;
 	}
 
 	void forwardPropagate(double* inputs)
 	{
-		bool* searched = new bool[bias.size()]{};
-
 		for (int i = 0; i < bias.size(); i++) preoutput[i] = bias[i];
-
-		for (int i = 0; i < numInputs; i++)
-		{
-			searched[i] = true;
-			output[i] = inputs[i];
-		}
-
-		for (int o = numInputs; o < numInputs + numOutputs; o++) getNodeValue(o, searched);
-
-		delete[] searched;
+		for (int i = 0; i < numInputs; i++) output[i] = inputs[i];
+		for (int i = 0; i < bias.size() - numInputs; i++) getNodeValue(order[i]);
 	}
 
 	void getNodeChange(int node)
@@ -255,7 +185,6 @@ public:
 		for (int c = 0; c < connections[node].size(); c++)
 		{
 			int childNode = connections[node][c];
-
 			dweights[node][c] += bBais * output[childNode];
 			doutput[childNode] += bBais * weights[node][c];
 		}
@@ -265,9 +194,9 @@ public:
 	{
 		forwardPropagate(inputs);
 
+		for (int i = 0; i < bias.size(); i++) doutput[i] = 0;
 		for (int o = numInputs; o < numInputs + numOutputs; o++)
 			doutput[o] = output[o] - outputs[o - numInputs];
-
 		for (int i = bias.size() - numInputs - 1; i >= 0; i--) getNodeChange(order[i]);
 	}
 
@@ -329,7 +258,6 @@ public:
 			int node1 = doubleRand() * (order.size() - 1) + 1;
 			int node2 = order[doubleRand() * node1];
 			node1 = order[node1];
-
 			vector<int>::iterator findNode2 = find(connections[node1].begin(), connections[node1].end(), node2);
 
 			if (findNode2 == connections[node1].end())
@@ -346,19 +274,6 @@ int main()
 {
 	DNN agent;
 	int tick = 0;
-
-	/*agent.addNode();
-	agent.updateOrder();*/
-	/*for (int i = 0; i < 20; i++)
-	{
-		if (doubleRand() > 0.7)
-		{
-		}
-		else {
-			agent.addConnection();
-			agent.updateOrder();
-		}
-	}*/
 
 	while (true)
 	{
@@ -386,7 +301,7 @@ int main()
 
 		agent.applyPropagationChange(1.0 / batchSize);
 
-		if (++tick == 100000)
+		if (++tick == 10000)
 		{
 			tick = 0;
 
